@@ -6,6 +6,7 @@ mkpasswd clone of the command present in the whois package available in Debian
 import argparse
 import crypt
 import re
+import os
 import sys
 
 from getpass import getpass
@@ -53,6 +54,23 @@ def salt(string):
     return string
 
 
+def get_pass():
+    """
+    Get password
+    """
+    if opts.password:
+        return opts.password
+    if opts.stdin:
+        return sys.stdin.readline().rstrip()
+    if opts.password_fd is not None:
+        return os.fdopen(opts.password_fd).readline().rstrip()
+    passwd = getpass("Password: ")
+    passwd2 = getpass("Password (again): ")
+    if passwd != passwd2:
+        sys.exit("ERROR: Passwords do not match")
+    return passwd
+
+
 def parse_opts():
     """
     Parse opts
@@ -64,6 +82,10 @@ def parse_opts():
                         help="Use the specified number of rounds")
     parser.add_argument('-S', '--salt', type=salt,
                         help="Use the string as salt")
+    parser.add_argument('-P', '--password-fd', type=int,
+                        help="Read the password from the specified file descriptor")
+    parser.add_argument('-s', '--stdin', action='store_true',
+                        help="like --password-fd=0")
     parser.add_argument('password', nargs='?')
     return parser.parse_args()
 
@@ -90,15 +112,7 @@ def main():
         opts.salt = crypt.mksalt(opts.method)
         if opts.salt[0] == "$":
             opts.salt = opts.salt[3:]
-
-    if not opts.password:
-        passwd = getpass("Password: ")
-        passwd2 = getpass("Password (again): ")
-        if passwd != passwd2:
-            sys.exit("ERROR: Passwords do not match")
-        opts.password = passwd
-
-    print(crypt.crypt(opts.password, "%s%s%s" % (prefix[opts.method.name], opts.rounds, opts.salt)))
+    print(crypt.crypt(get_pass(), "%s%s%s" % (prefix[opts.method.name], opts.rounds, opts.salt)))
 
 
 if __name__ == "__main__":

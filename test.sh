@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 
 MKPASSWD=/usr/bin/mkpasswd
 
@@ -11,6 +11,8 @@ PASS="notsecret"
 if [ ! -x /usr/bin/mkpasswd ] ; then
 	exit 0
 fi
+
+trap "echo FAILED; exit 1" ERR
 
 try() {
 	[ $($MKPASSWD "$@") = $(./mkpasswd "$@") ]
@@ -39,5 +41,8 @@ for hash in sha-256 sha-512 ; do
 	try -m $hash -S $SALT_16 $PASS
 	try -m $hash -S $SALT_16 -R 5000 $PASS
 done
+
+[ $(echo $PASS | ./mkpasswd -S $SALT_2 --stdin) = $(mkpasswd -S $SALT_2 $PASS) ]
+[ $(echo $PASS | ./mkpasswd -S $SALT_2 --password-fd 0) = $(mkpasswd -S $SALT_2 $PASS) ]
 
 echo "PASSED"

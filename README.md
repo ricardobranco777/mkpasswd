@@ -14,4 +14,8 @@ mkpasswd [-h] [-m {des,md5,sha-256,sha-512,help}] [-R ROUNDS] [-S SALT] [passwor
   -R ROUNDS, --rounds ROUNDS
                         Use the specified number of rounds
   -S SALT, --salt SALT  Use the string as salt
+  -P PASSWORD_FD, --password-fd PASSWORD_FD
+                        Read the password from the specified file descriptor
+  -s STDIN, --stdin STDIN
+                        like --password-fd=0
 ```
