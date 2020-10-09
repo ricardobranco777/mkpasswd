@@ -63,7 +63,10 @@ def get_pass():
     if opts.stdin:
         return sys.stdin.readline().rstrip()
     if opts.password_fd is not None:
-        return os.fdopen(opts.password_fd).readline().rstrip()
+        try:
+            return os.fdopen(opts.password_fd).readline().rstrip()
+        except ValueError as err:
+            sys.exit("%s" % err)
     passwd = getpass("Password: ")
     passwd2 = getpass("Password (again): ")
     if passwd != passwd2:
