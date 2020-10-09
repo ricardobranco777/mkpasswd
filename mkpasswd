@@ -1,0 +1,109 @@
+#!/usr/bin/python
+"""
+mkpasswd clone of the command present in the whois package available in Debian
+"""
+
+import argparse
+import crypt
+import re
+import sys
+
+from getpass import getpass
+
+
+def print_methods():
+    """
+    Print available methods
+    """
+    print("""Available methods:
+des\t\tstandard 56 bit DES-based crypt(3)
+md5\t\tMD5
+sha-256 \tSHA-256
+sha-512 \tSHA-512""")
+
+
+def method(string):
+    """
+    Check method option
+    """
+    string = string.lower()
+    if string == "help":
+        print_methods()
+        sys.exit(0)
+    if string == "des":
+        return crypt.METHOD_CRYPT
+    if string == "md5":
+        return crypt.METHOD_MD5
+    if string == "sha-256":
+        return crypt.METHOD_SHA256
+    if string == "sha-512":
+        return crypt.METHOD_SHA512
+    raise argparse.ArgumentTypeError("Invalid method '%s'." % string)
+
+
+def salt(string):
+    """
+    Check salt option
+    """
+    if len(string) == 0:
+        raise argparse.ArgumentTypeError("Invalid salt")
+    match = re.search(r"([^0-9A-Za-z\./])", string)
+    if match is not None:
+        raise argparse.ArgumentTypeError("Illegal salt character '%s'" % match.group())
+    return string
+
+
+def parse_opts():
+    """
+    Parse opts
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-m', '--method', default=crypt.METHOD_CRYPT, type=method,
+                        help="Compute the password using the TYPE method")
+    parser.add_argument('-R', '--rounds', default="",
+                        help="Use the specified number of rounds")
+    parser.add_argument('-S', '--salt', type=salt,
+                        help="Use the string as salt")
+    parser.add_argument('password', nargs='?')
+    return parser.parse_args()
+
+
+def main():
+    """
+    Main function
+    """
+    prefix = {'CRYPT': '', 'MD5': '$1$', 'SHA256': '$5$', 'SHA512': '$6$'}
+    try:
+        if opts.rounds and int(opts.rounds) < 1000:
+            sys.exit("Invalid number of rounds: '%s'" % opts.rounds)
+    except ValueError:
+        sys.exit("Invalid number '%s'." % opts.rounds)
+    if opts.method in {crypt.METHOD_SHA256, crypt.METHOD_SHA512}:
+        if opts.rounds:
+            opts.rounds = "rounds=%s$" % opts.rounds
+    else:
+        opts.rounds = ""
+    if opts.salt:
+        if len(opts.salt) > opts.method.salt_chars:
+            sys.exit("Wrong salt length: %d bytes when %d expected." % (len(opts.salt), opts.method.salt_chars))
+    else:
+        opts.salt = crypt.mksalt(opts.method)
+        if opts.salt[0] == "$":
+            opts.salt = opts.salt[3:]
+
+    if not opts.password:
+        passwd = getpass("Password: ")
+        passwd2 = getpass("Password (again): ")
+        if passwd != passwd2:
+            sys.exit("ERROR: Passwords do not match")
+        opts.password = passwd
+
+    print(crypt.crypt(opts.password, "%s%s%s" % (prefix[opts.method.name], opts.rounds, opts.salt)))
+
+
+if __name__ == "__main__":
+    try:
+        opts = parse_opts()
+        main()
+    except KeyboardInterrupt:
+        sys.exit(1)
