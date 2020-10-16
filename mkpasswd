@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 """
 mkpasswd clone of the command present in the whois package available in Debian
 """
