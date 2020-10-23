@@ -19,3 +19,7 @@ mkpasswd [-h] [-m {des,md5,sha-256,sha-512,help}] [-R ROUNDS] [-S SALT] [passwor
   -s STDIN, --stdin STDIN
                         like --password-fd=0
 ```
+
+## Requirements
+
+- Python 3.5+
