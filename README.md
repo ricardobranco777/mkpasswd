@@ -2,7 +2,7 @@
 
 This Python script emulates the `mkpasswd` command present in the `whois` package available in Debian/Ubuntu.
 
-[![Build Status](https://travis-ci.com/ricardobranco777/tellme.svg?branch=master)](https://travis-ci.org/ricardobranco777/tellme)
+[![Build Status](https://travis-ci.com/ricardobranco777/mkpasswd.svg?branch=master)](https://travis-ci.org/ricardobranco777/mkpasswd)
 
 ## Usage
 
@@ -22,4 +22,4 @@ mkpasswd [-h] [-m {des,md5,sha-256,sha-512,help}] [-R ROUNDS] [-S SALT] [passwor
 
 ## Requirements
 
-- Python 3.5+
+- Python 3.6+

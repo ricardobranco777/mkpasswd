@@ -39,7 +39,7 @@ def method(string):
         return crypt.METHOD_SHA256
     if string == "sha-512":
         return crypt.METHOD_SHA512
-    raise argparse.ArgumentTypeError("Invalid method '%s'." % string)
+    raise argparse.ArgumentTypeError(f"Invalid method '{string}'.")
 
 
 def salt(string):
@@ -50,7 +50,7 @@ def salt(string):
         raise argparse.ArgumentTypeError("Invalid salt")
     match = re.search(r"([^0-9A-Za-z\./])", string)
     if match is not None:
-        raise argparse.ArgumentTypeError("Illegal salt character '%s'" % match.group())
+        raise argparse.ArgumentTypeError(f"Illegal salt character '{match.group()}'")
     return string
 
 
@@ -66,7 +66,7 @@ def get_pass():
         try:
             return os.fdopen(opts.password_fd).readline().rstrip()
         except ValueError as err:
-            sys.exit("%s" % err)
+            sys.exit(f"{err}")
     passwd = getpass("Password: ")
     passwd2 = getpass("Password (again): ")
     if passwd != passwd2:
@@ -100,22 +100,22 @@ def main():
     prefix = {'CRYPT': '', 'MD5': '$1$', 'SHA256': '$5$', 'SHA512': '$6$'}
     try:
         if opts.rounds and int(opts.rounds) < 1000:
-            sys.exit("Invalid number of rounds: '%s'" % opts.rounds)
+            sys.exit(f"Invalid number of rounds: '{opts.rounds}'")
     except ValueError:
-        sys.exit("Invalid number '%s'." % opts.rounds)
+        sys.exit(f"Invalid number '{opts.rounds}'.")
     if opts.method in {crypt.METHOD_SHA256, crypt.METHOD_SHA512}:
         if opts.rounds:
-            opts.rounds = "rounds=%s$" % opts.rounds
+            opts.rounds = f"rounds={opts.rounds}$"
     else:
         opts.rounds = ""
     if opts.salt:
         if len(opts.salt) > opts.method.salt_chars:
-            sys.exit("Wrong salt length: %d bytes when %d expected." % (len(opts.salt), opts.method.salt_chars))
+            sys.exit(f"Wrong salt length: {len(opts.salt)} bytes when {opts.method.salt_chars} expected.")
     else:
         opts.salt = crypt.mksalt(opts.method)
         if opts.salt[0] == "$":
             opts.salt = opts.salt[3:]
-    print(crypt.crypt(get_pass(), "%s%s%s" % (prefix[opts.method.name], opts.rounds, opts.salt)))
+    print(crypt.crypt(get_pass(), f"{prefix[opts.method.name]}{opts.rounds}{opts.salt}"))
 
 
 if __name__ == "__main__":
