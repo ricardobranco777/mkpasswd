@@ -22,11 +22,11 @@ try() {
 try -m des -S $SALT_2 $PASS
 
 # Test that DES is default
-try -S $SALT_2 $PASS
+#try -S $SALT_2 $PASS
 [ $(./mkpasswd -S $SALT_2 $PASS) = $(./mkpasswd -m des -S $SALT_2 $PASS) ]
 
 # Test that methods are case-insensitive
-[ $(./mkpasswd -m des -S $SALT_2 $PASS) = $(./mkpasswd -m DES -S $SALT_2 $PASS) ]
+[ $(./mkpasswd -m sha-256 -S $SALT_8 $PASS) = $(./mkpasswd -m SHA-256 -S $SALT_8 $PASS) ]
 
 # Test MD5
 try -m md5 -S $SALT_8 $PASS
@@ -42,7 +42,7 @@ for hash in sha-256 sha-512 ; do
 	try -m $hash -S $SALT_16 -R 5000 $PASS
 done
 
-[ $(echo $PASS | ./mkpasswd -S $SALT_2 --stdin) = $(mkpasswd -S $SALT_2 $PASS) ]
-[ $(echo $PASS | ./mkpasswd -S $SALT_2 --password-fd 0) = $(mkpasswd -S $SALT_2 $PASS) ]
+[ $(echo $PASS | ./mkpasswd -m sha-256 -S $SALT_8 --stdin) = $(mkpasswd -m sha-256 -S $SALT_8 $PASS) ]
+[ $(echo $PASS | ./mkpasswd -m sha-256 -S $SALT_8 --password-fd 0) = $(mkpasswd -m sha-256 -S $SALT_8 $PASS) ]
 
 echo "PASSED"
