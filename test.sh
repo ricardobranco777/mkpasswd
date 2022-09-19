@@ -31,18 +31,14 @@ try -m des -S $SALT_2 $PASS
 # Test MD5
 try -m md5 -S $SALT_8 $PASS
 
-# DES & MD5 should ignore -R
-[ $(./mkpasswd -m des -S $SALT_2 $PASS) = $(./mkpasswd -m DES -S $SALT_2 -R 1000 $PASS) ]
-[ $(./mkpasswd -m md5 -S $SALT_8 $PASS) = $(./mkpasswd -m MD5 -S $SALT_8 -R 1000 $PASS) ]
-
 # Test SHA-256 & SHA-512
 for hash in sha-256 sha-512 ; do
-	try -m $hash -S $SALT_8 $PASS
-	try -m $hash -S $SALT_16 $PASS
-	try -m $hash -S $SALT_16 -R 5000 $PASS
+	try -m $hash -R 1000 -S $SALT_8 $PASS
+	try -m $hash -R 2000 -S $SALT_16 $PASS
+	try -m $hash -R 3000 -S $SALT_16 $PASS
 done
 
-[ $(echo $PASS | ./mkpasswd -m sha-256 -S $SALT_8 --stdin) = $(mkpasswd -m sha-256 -S $SALT_8 $PASS) ]
-[ $(echo $PASS | ./mkpasswd -m sha-256 -S $SALT_8 --password-fd 0) = $(mkpasswd -m sha-256 -S $SALT_8 $PASS) ]
+[ $(echo $PASS | ./mkpasswd -m sha-256 -R 1000 -S $SALT_8 --stdin) = $(mkpasswd -m sha-256 -R 1000 -S $SALT_8 $PASS) ]
+[ $(echo $PASS | ./mkpasswd -m sha-256 -R 1000 -S $SALT_8 --password-fd 0) = $(mkpasswd -m sha-256 -R 1000 -S $SALT_8 $PASS) ]
 
 echo "PASSED"

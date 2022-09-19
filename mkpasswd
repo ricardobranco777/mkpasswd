@@ -4,54 +4,38 @@ mkpasswd clone of the command present in the whois package available in Debian
 """
 
 import argparse
-import crypt
-import re
 import os
 import sys
 
 from getpass import getpass
+from passlib import hash  # pylint: disable=redefined-builtin
+
+
+IGNORED = set("htdigest msdcc msdcc2 oracle10 postgres_md5 roundup_plaintext unix_disabled unix_fallback".split())
+METHODS = [m for m in dir(hash) if not m.startswith("_") and m not in IGNORED]
 
 
 def print_methods():
     """
     Print available methods
     """
-    print("""Available methods:
-des\t\tstandard 56 bit DES-based crypt(3)
-md5\t\tMD5
-sha-256 \tSHA-256
-sha-512 \tSHA-512""")
+    print("Available methods:")
+    print("\n".join(METHODS))
 
 
 def method(string):
     """
     Check method option
     """
-    string = string.lower()
+    string = string.lower().replace("-", "")
     if string == "help":
         print_methods()
         sys.exit(0)
-    if string == "des":
-        return crypt.METHOD_CRYPT
-    if string == "md5":
-        return crypt.METHOD_MD5
-    if string == "sha-256":
-        return crypt.METHOD_SHA256
-    if string == "sha-512":
-        return crypt.METHOD_SHA512
-    raise argparse.ArgumentTypeError(f"Invalid method '{string}'.")
-
-
-def salt(string):
-    """
-    Check salt option
-    """
-    if len(string) == 0:
-        raise argparse.ArgumentTypeError("Invalid salt")
-    match = re.search(r"([^0-9A-Za-z\./])", string)
-    if match is not None:
-        raise argparse.ArgumentTypeError(f"Illegal salt character '{match.group()}'")
-    return string
+    if string in METHODS:
+        return string
+    if f"{string}_crypt" in METHODS:
+        return f"{string}_crypt"
+    raise argparse.ArgumentTypeError(f"Invalid method: {string}")
 
 
 def get_pass():
@@ -79,11 +63,11 @@ def parse_opts():
     Parse opts
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--method', default=crypt.METHOD_CRYPT, type=method,
+    parser.add_argument('-m', '--method', default="des_crypt", type=method,
                         help="Compute the password using the TYPE method")
     parser.add_argument('-R', '--rounds', default="",
                         help="Use the specified number of rounds")
-    parser.add_argument('-S', '--salt', type=salt,
+    parser.add_argument('-S', '--salt', default="",
                         help="Use the string as salt")
     parser.add_argument('-P', '--password-fd', type=int,
                         help="Read the password from the specified file descriptor")
@@ -97,25 +81,30 @@ def main():
     """
     Main function
     """
-    prefix = {'CRYPT': '', 'MD5': '$1$', 'SHA256': '$5$', 'SHA512': '$6$'}
-    try:
-        if opts.rounds and int(opts.rounds) < 1000:
-            sys.exit(f"Invalid number of rounds: '{opts.rounds}'")
-    except ValueError:
-        sys.exit(f"Invalid number '{opts.rounds}'.")
-    if opts.method in {crypt.METHOD_SHA256, crypt.METHOD_SHA512}:
-        if opts.rounds:
-            opts.rounds = f"rounds={opts.rounds}$"
-    else:
-        opts.rounds = ""
+    crypt = getattr(hash, opts.method)
+    args = {}
+    if opts.rounds:
+        try:
+            if not crypt.min_rounds <= int(opts.rounds) <= crypt.max_rounds:
+                sys.exit(f"Invalid number of rounds: {opts.rounds} should be between {crypt.min_rounds} and {crypt.max_rounds}")
+        except AttributeError:
+            sys.exit(f"Method does not use rounds: {opts.method}")
+        except ValueError:
+            sys.exit(f"Invalid number '{opts.rounds}'.")
+        args = {"rounds": opts.rounds}
     if opts.salt:
-        if len(opts.salt) > opts.method.salt_chars:
-            sys.exit(f"Wrong salt length: {len(opts.salt)} bytes when {opts.method.salt_chars} expected.")
-    else:
-        opts.salt = crypt.mksalt(opts.method)
-        if opts.salt[0] == "$":
-            opts.salt = opts.salt[3:]
-    print(crypt.crypt(get_pass(), f"{prefix[opts.method.name]}{opts.rounds}{opts.salt}"))
+        if not set(opts.salt) <= set(crypt.salt_chars):
+            sys.exit(f"Invalid characters in salt for {opts.method}. Valid set: {crypt.salt_chars}")
+        try:
+            if not crypt.min_salt_size <= len(opts.salt) <= crypt.max_salt_size:
+                sys.exit(f"Wrong salt length: {len(opts.salt)} should be between {crypt.min_salt_size} and {crypt.max_salt_size}")
+        except AttributeError:
+            sys.exit(f"Method does not use salt: {opts.method}")
+        args.update({"salt": opts.salt})
+    try:
+        print(crypt.using(**args).hash(secret=get_pass()))
+    except ValueError as exc:
+        sys.exit(str(exc))
 
 
 if __name__ == "__main__":
