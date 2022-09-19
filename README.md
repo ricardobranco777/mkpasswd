@@ -28,12 +28,12 @@ options:
 
 - Python 3.6+
 - [hashlib](https://passlib.readthedocs.io/)
-- `argon2_cffi` for argon2
+- argon2_cffi for argon2
 
 ## Methods
 
 NOTES:
-  - You can use skip `_crypt`
+  - You can skip `_crypt`
 
 ```
 $ ./mkpasswd -m help
