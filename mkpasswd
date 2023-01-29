@@ -4,15 +4,15 @@ mkpasswd clone of the command present in the whois package available in Debian
 """
 
 import argparse
+import getpass
 import os
 import sys
 
-from getpass import getpass
-from passlib import hash  # pylint: disable=redefined-builtin
+import passlib.hash
 
 
 IGNORED = set("htdigest msdcc msdcc2 oracle10 postgres_md5 roundup_plaintext unix_disabled unix_fallback".split())
-METHODS = [m for m in dir(hash) if not m.startswith("_") and m not in IGNORED]
+METHODS = [m for m in dir(passlib.hash) if not m.startswith("_") and m not in IGNORED]
 
 
 def print_methods():
@@ -51,8 +51,8 @@ def get_pass():
             return os.fdopen(opts.password_fd).readline().rstrip()
         except ValueError as err:
             sys.exit(f"{err}")
-    passwd = getpass("Password: ")
-    passwd2 = getpass("Password (again): ")
+    passwd = getpass.getpass("Password: ")
+    passwd2 = getpass.getpass("Password (again): ")
     if passwd != passwd2:
         sys.exit("ERROR: Passwords do not match")
     return passwd
@@ -81,7 +81,7 @@ def main():
     """
     Main function
     """
-    crypt = getattr(hash, opts.method)
+    crypt = getattr(passlib.hash, opts.method)
     args = {}
     if opts.rounds:
         try:
