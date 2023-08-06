@@ -23,7 +23,7 @@ def print_methods():
     print("\n".join(METHODS))
 
 
-def method(string):
+def method(string: str) -> str:
     """
     Check method option
     """
@@ -38,7 +38,7 @@ def method(string):
     raise argparse.ArgumentTypeError(f"Invalid method: {string}")
 
 
-def get_pass():
+def get_pass() -> str:
     """
     Get password
     """

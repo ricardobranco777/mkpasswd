@@ -1,8 +1,8 @@
+![Build Status](https://github.com/ricardobranco777/mkpasswd/actions/workflows/ci.yml/badge.svg)
+
 # mkpasswd
 
 This Python script emulates the `mkpasswd` command present in the `whois` package available in Debian/Ubuntu.
-
-[![Build Status](https://travis-ci.com/ricardobranco777/mkpasswd.svg?branch=master)](https://travis-ci.org/ricardobranco777/mkpasswd)
 
 ## Usage
 
@@ -26,9 +26,9 @@ options:
 
 ## Requirements
 
-- Python 3.6+
+- Tested on Python 3.8+
 - [hashlib](https://passlib.readthedocs.io/)
-- argon2_cffi for argon2
+- `argon2_cffi` for argon2
 
 ## Methods
 
