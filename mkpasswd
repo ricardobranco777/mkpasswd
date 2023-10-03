@@ -38,7 +38,7 @@ def method(string: str) -> str:
     raise argparse.ArgumentTypeError(f"Invalid method: {string}")
 
 
-def get_pass() -> str:
+def get_pass(opts) -> str:
     """
     Get password
     """
@@ -81,6 +81,7 @@ def main():
     """
     Main function
     """
+    opts = parse_opts()
     crypt = getattr(passlib.hash, opts.method)
     args = {}
     if opts.rounds:
@@ -102,14 +103,13 @@ def main():
             sys.exit(f"Method does not use salt: {opts.method}")
         args.update({"salt": opts.salt})
     try:
-        print(crypt.using(**args).hash(secret=get_pass()))
+        print(crypt.using(**args).hash(secret=get_pass(opts)))
     except ValueError as exc:
         sys.exit(str(exc))
 
 
 if __name__ == "__main__":
     try:
-        opts = parse_opts()
         main()
     except KeyboardInterrupt:
         sys.exit(1)
