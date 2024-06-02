@@ -2,7 +2,11 @@ BIN=mkpasswd
 FILES=$(BIN)
 
 .PHONY: all
-all: flake8 pylint mypy test
+all:	$(BIN)
+	@true
+
+.PHONY: testall
+testall: flake8 pylint mypy test
 
 .PHONY: flake8
 flake8:
